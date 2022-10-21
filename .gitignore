@@ -1,4 +1,6 @@
 /node_modules
 /vendor
 /.idea
-
+/bundle.js
+/firebase-messaging-sw.js
+/index.html
