@@ -1,23 +1,33 @@
 <?php
-const URL = 'https://fcm.googleapis.com/fcm/send';
-const API_KEY = 'YOUR_API_KEY';//replace with your own key
-const REGISTRATION_TOKEN = 'YOUR_APP_REGISTRATION_TOKEN';//replace with your own token
+require 'config.php';
 
-function send_notification()
+function send_notification(array $message): bool|string
 {
+    $redis = new Redis();
+    $redis->connect('redis');
+    $redis->auth('redis');
+
+    $keys = $redis->keys('connection*');
+    $tokens = array_map(fn ($key) => $redis->get($key), $keys);
+
     $headers = array(
         'Authorization: key = ' . API_KEY,
         'Content-Type: application/json'
     );
 
     $notification = [
-        'title' => 'Hello',
-        'body' => 'I am a notification',
+        'title' => $message['title'] ?? 'Title',
+        'body' => $message['body'] ?? 'Body',
 
     ];
 
+    if (empty($tokens)){
+        return 'No registration_ids in redis';
+    }
+
     $fcmNotification = [
-        'to' => REGISTRATION_TOKEN,
+        //to => single device id
+        'registration_ids' => $tokens,
         'notification' => $notification,
     ];
 
@@ -33,12 +43,24 @@ function send_notification()
     $result = curl_exec($ch);
 
     if ($result === FALSE) {
-        die('Curl failed: ' . curl_error($ch));
+        return 'Curl failed: ' . curl_error($ch);
     }
     curl_close($ch);
+
+    $obj = json_decode($result);
+
+    $reg_ids_result = array_combine($keys, $obj->results);
+    foreach ($reg_ids_result as $id => $res) {
+        if (isset($res->error)) {
+            if ($res->error === 'NotRegistered') {
+                $redis->del($id);
+            }
+        }
+    }
+    $redis->close();
+
     return $result;
 }
 
-$message_status = send_notification();
-echo $message_status;
-
+$message_status = send_notification(MESSAGE);
+echo $message_status . PHP_EOL;
