@@ -1,0 +1,15 @@
+Instructions
+
+1. Register your app in https://console.firebase.google.com/
+2. Create config.js and config.php in src folder by config.example.js and config.example.php with your firebase configs
+3. Install any web server (for example, ngrok)
+4. Run npm install
+5. Run docker-compose up --build -d
+6. Run npm run dev
+7. Run ngrok http 80
+8. Open url from ngrok in browser
+9. Run docker-compose exec php bash
+10. Run php src/index.php
+
+Now you send messages to your app via firebase)
+You can see messages in your app in browser console and notifications(if it was a background message) or in browser window(if it was a foreground message)
