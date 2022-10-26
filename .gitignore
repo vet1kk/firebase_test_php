@@ -4,3 +4,5 @@
 /bundle.js
 /firebase-messaging-sw.js
 /index.html
+/src/config.js
+/src/config.php
